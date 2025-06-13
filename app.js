@@ -1,5 +1,5 @@
 // Configuración de la API
-const API_BASE_URL = 'http://localhost:4000';
+const API_BASE_URL = window.API_BASE_URL;
 
 // Estado global de la aplicación
 let currentUser = null;
@@ -100,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeApp() {
     showLogin();
-    addDemoMessage();
 }
 
 function addDemoMessage() {
@@ -137,31 +136,28 @@ function setupEventListeners() {
 // Funciones de autenticación
 async function handleLogin(e) {
     e.preventDefault();
-    
+
     const loginBtn = document.getElementById('loginBtn');
     const loginSpinner = document.getElementById('loginSpinner');
     const loginError = document.getElementById('loginError');
     const formData = new FormData(loginForm);
-    
+
     const username = formData.get('username');
     const password = formData.get('password');
-    
-    // Validación básica
+
     if (!username || !password) {
         showError(loginError, 'Por favor ingrese usuario y contraseña');
         return;
     }
-    
-    // Mostrar loading
+
     loginBtn.classList.add('loading');
     loginSpinner.classList.remove('hidden');
     loginError.classList.add('hidden');
-    
-    // Intentar conectar con el backend real primero
+
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 segundo timeout
-        
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
         const response = await fetch(`${API_BASE_URL}/api/login`, {
             method: 'POST',
             headers: {
@@ -173,37 +169,39 @@ async function handleLogin(e) {
             }),
             signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (response.ok) {
             const data = await response.json();
             if (data.token) {
                 authToken = data.token;
-                currentUser = data.user;
+                // AQUÍ: guardas el id real del usuario
+                currentUser = {
+                    id: data.user.id,
+                    username: data.user.username || data.user.correo, // depende de cómo regresas en backend
+                };
                 isOfflineMode = false;
                 completLogin();
                 return;
             }
         }
-        
-        // Si llegamos aquí, el servidor respondió pero con error
+
         const data = await response.json();
         throw new Error(data.message || 'Credenciales incorrectas');
-        
+
     } catch (error) {
-        // Si hay error de conexión o timeout, activar modo demostración
         console.log('Backend no disponible, activando modo demostración');
-        
-        // Activar modo demostración después de un pequeño delay
+
         setTimeout(() => {
             authToken = 'demo_token_' + Date.now();
-            currentUser = { username: username };
+            currentUser = { id: 9999, username: username }; // fake id para demo
             isOfflineMode = true;
             completLogin();
         }, 1000);
     }
 }
+
 
 function completLogin() {
     const loginBtn = document.getElementById('loginBtn');
@@ -503,7 +501,7 @@ function validateForm() {
 function createFormData() {
     const formData = new FormData();
 
-    // Campos básicos
+    // CAMPOS BÁSICOS
     const basicFields = ['estadoTiempo', 'estacion', 'tipoRegistro', 'reporteIdLocal', 'fechaCapturaLocal'];
     basicFields.forEach(fieldName => {
         const field = document.getElementById(fieldName);
@@ -512,7 +510,12 @@ function createFormData() {
         }
     });
 
-    // Campos específicos
+    // 🚨 AQUI metemos el usuario_id
+    if (currentUser && currentUser.id) {
+        formData.append('usuario_id', currentUser.id);
+    }
+
+    // CAMPOS ESPECÍFICOS
     const tipoRegistro = document.getElementById('tipoRegistro').value;
     if (tipoRegistro && specificFieldsConfig[tipoRegistro]) {
         specificFieldsConfig[tipoRegistro].forEach(fieldConfig => {
@@ -520,11 +523,9 @@ function createFormData() {
             if (field) {
                 let value = field.value;
 
-                // Si es listaChequeo (campo JSON especial)
                 if (fieldConfig.name === 'listaChequeo') {
                     if (value.trim()) {
                         try {
-                            // Validar que sea JSON válido
                             JSON.parse(value);
                             formData.append(fieldConfig.name, value);
                         } catch (error) {
@@ -532,28 +533,25 @@ function createFormData() {
                             throw new Error('Campo listaChequeo inválido');
                         }
                     }
-                    // Si vacío, no mandar listaChequeo
                     return;
                 }
 
-                // Si es campo observaciones en variables_climaticas → no mandar
                 if (tipoRegistro === 'variables_climaticas' && fieldConfig.name === 'observaciones') {
-                    return; // skip
+                    return;
                 }
 
-                // Campos normales
                 formData.append(fieldConfig.name, value);
             }
         });
     }
 
-    // Evidencias
+    // EVIDENCIAS
     const evidenciasField = document.getElementById('evidencias');
     if (evidenciasField.value.trim()) {
         formData.append('evidencias', evidenciasField.value);
     }
 
-    // Imágenes
+    // IMÁGENES
     const files = imagesInput.files;
     for (let i = 0; i < files.length; i++) {
         formData.append('images', files[i]);
