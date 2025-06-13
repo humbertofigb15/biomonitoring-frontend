@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioDev-Co - Sistema de Biomonitorización</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Pantalla de Login -->
+    <div id="loginScreen" class="screen">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>🌿 BioDev-Co</h1>
+                <p>Sistema de Biomonitorización</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username" class="form-label">Usuario/Email</label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn btn--primary btn--full-width" id="loginBtn">
+                    <span class="btn-text">Iniciar Sesión</span>
+                    <div class="spinner hidden" id="loginSpinner"></div>
+                </button>
+                
+                <div id="loginError" class="error-message hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard Principal -->
+    <div id="dashboardScreen" class="screen hidden">
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>🌿 BioDev-Co Dashboard</h1>
+                <button id="logoutBtn" class="btn btn--outline">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <div class="container">
+                <div class="card">
+                    <div class="card__header">
+                        <h2>Crear Nuevo Reporte de Biomonitorización</h2>
+                        <p>Complete el formulario para registrar un nuevo reporte de biomonitorización</p>
+                    </div>
+                    
+                    <div class="card__body">
+                        <form id="reportForm" class="report-form">
+                            <!-- Campos básicos requeridos -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="tipoRegistro" class="form-label">Tipo de Registro *</label>
+                                    <select id="tipoRegistro" name="tipoRegistro" class="form-control" required>
+                                        <option value="">Seleccione un tipo</option>
+                                        <option value="fauna_transecto">Fauna - Transecto</option>
+                                        <option value="fauna_punto_conteo">Fauna - Punto de Conteo</option>
+                                        <option value="fauna_busqueda_libre">Fauna - Búsqueda Libre</option>
+                                        <option value="validacion_cobertura">Validación de Cobertura</option>
+                                        <option value="parcela_vegetacion">Parcela de Vegetación</option>
+                                        <option value="camaras_trampa">Cámaras Trampa</option>
+                                        <option value="variables_climaticas">Variables Climáticas</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="estadoTiempo" class="form-label">Estado del Tiempo *</label>
+                                    <select id="estadoTiempo" name="estadoTiempo" class="form-control" required>
+    <option value="">Seleccione</option>
+    <option value="soleado">Soleado</option>
+    <option value="parcialmente_nublado">Parcialmente Nublado</option>
+    <option value="lluvioso">Lluvioso</option>
+</select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="estacion" class="form-label">Estación *</label>
+                                    <select id="estacion" name="estacion" class="form-control" required>
+    <option value="">Seleccione</option>
+    <option value="verano_seco">Verano Seco</option>
+    <option value="invierno_lluviosa">Invierno Lluviosa</option>
+</select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="reporteIdLocal" class="form-label">ID Local del Reporte</label>
+                                    <input type="text" id="reporteIdLocal" name="reporteIdLocal" class="form-control" placeholder="Ej: TR001">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fechaCapturaLocal" class="form-label">Fecha de Captura</label>
+                                <input type="datetime-local" id="fechaCapturaLocal" name="fechaCapturaLocal" class="form-control">
+                            </div>
+
+                            <!-- Campos específicos por tipo -->
+                            <div id="specificFields" class="specific-fields hidden">
+                                <!-- Se llenarán dinámicamente según el tipo -->
+                            </div>
+
+                            <!-- Evidencias adicionales -->
+                            <div class="form-group">
+                                <label for="evidencias" class="form-label">Evidencias Adicionales (JSON)</label>
+                                <textarea id="evidencias" name="evidencias" class="form-control" rows="4" placeholder='{"observaciones": "Ejemplo de datos adicionales", "temperatura": 25}'></textarea>
+                                <small class="form-help">Ingrese datos adicionales en formato JSON válido</small>
+                            </div>
+
+                            <!-- Subida de imágenes -->
+                            <div class="form-group">
+                                <label for="images" class="form-label">Imágenes (Máximo 5 archivos, 2MB cada uno)</label>
+                                <input type="file" id="images" name="images" class="form-control" multiple accept="image/jpeg,image/jpg,image/png,image/gif">
+                                <div id="imagePreview" class="image-preview"></div>
+                                <div id="fileError" class="error-message hidden"></div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn--primary" id="submitBtn">
+                                    <span class="btn-text">Crear Reporte</span>
+                                    <div class="spinner hidden" id="submitSpinner"></div>
+                                </button>
+                                <button type="reset" class="btn btn--secondary">Limpiar Formulario</button>
+                            </div>
+
+                            <div id="formError" class="error-message hidden"></div>
+                            <div id="formSuccess" class="success-message hidden"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
